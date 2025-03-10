@@ -1,0 +1,87 @@
+#!/bin/sh
+
+choose_group() {
+    if grep -q '^staff:' /etc/group; then
+        echo "staff"
+    else
+        echo "wheel"
+    fi
+}
+
+init_scull_devices() {
+    local major=$1
+    local grp=$2
+    local perm=664
+
+    rm -f /dev/scull[0-3]
+    mknod /dev/scull0 c "$major" 0
+    mknod /dev/scull1 c "$major" 1
+    mknod /dev/scull2 c "$major" 2
+    mknod /dev/scull3 c "$major" 3
+    ln -sf scull0 /dev/scull
+    chgrp "$grp" /dev/scull[0-3]
+    chmod "$perm" /dev/scull[0-3]
+
+    rm -f /dev/scullpipe[0-3]
+    mknod /dev/scullpipe0 c "$major" 4
+    mknod /dev/scullpipe1 c "$major" 5
+    mknod /dev/scullpipe2 c "$major" 6
+    mknod /dev/scullpipe3 c "$major" 7
+    ln -sf scullpipe0 /dev/scullpipe
+    chgrp "$grp" /dev/scullpipe[0-3]
+    chmod "$perm" /dev/scullpipe[0-3]
+
+    rm -f /dev/scullsingle
+    mknod /dev/scullsingle c "$major" 8
+    chgrp "$grp" /dev/scullsingle
+    chmod "$perm" /dev/scullsingle
+
+    rm -f /dev/sculluid
+    mknod /dev/sculluid c "$major" 9
+    chgrp "$grp" /dev/sculluid
+    chmod "$perm" /dev/sculluid
+
+    rm -f /dev/scullwuid
+    mknod /dev/scullwuid c "$major" 10
+    chgrp "$grp" /dev/scullwuid
+    chmod "$perm" /dev/scullwuid
+
+    rm -f /dev/scullpriv
+    mknod /dev/scullpriv c "$major" 11
+    chgrp "$grp" /dev/scullpriv
+    chmod "$perm" /dev/scullpriv
+}
+
+load_scull() {
+    modprobe scull || exit 1
+    local major
+    major=$(awk '$2=="scull" {print $1}' /proc/devices)
+    [ -z "$major" ] && return
+    init_scull_devices "$major" "$MAIN_GROUP"
+}
+
+unload_scull() {
+    modprobe -r scull || exit 1
+    rm -f /dev/scull /dev/scull[0-3] \
+          /dev/scullpipe /dev/scullpipe[0-3] \
+          /dev/scullsingle /dev/sculluid \
+          /dev/scullwuid /dev/scullpriv
+}
+
+MAIN_GROUP=$(choose_group)
+
+case "$1" in
+    start)
+        load_scull
+        ;;
+    stop)
+        unload_scull
+        ;;
+    *)
+        echo "Usage: $0 {start|stop}"
+        exit 1
+        ;;
+esac
+
+exit 0
+

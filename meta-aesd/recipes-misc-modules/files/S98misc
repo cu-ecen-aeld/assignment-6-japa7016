@@ -1,0 +1,54 @@
+#!/bin/sh
+
+choose_group() {
+    if grep -q '^staff:' /etc/group; then
+        echo "staff"
+    else
+        echo "wheel"
+    fi
+}
+
+create_device_node() {
+    local modName=$1
+    local grp=$2
+    local perm=664
+
+    rm -f /dev/"$modName"
+    mknod /dev/"$modName" c "$(awk '$2=="'"$modName"'" {print $1}' /proc/devices)" 0
+    chgrp "$grp" /dev/"$modName"
+    chmod "$perm" /dev/"$modName"
+}
+
+load_misc_mod() {
+    local modName=$1
+    modprobe "$modName" || exit 1
+    local major
+    major=$(awk '$2=="'"$modName"'" {print $1}' /proc/devices)
+    [ -n "$major" ] && create_device_node "$modName" "$MAIN_GROUP"
+}
+
+unload_misc_mod() {
+    local modName=$1
+    modprobe -r "$modName" || exit 1
+    rm -f /dev/"$modName"
+}
+
+MAIN_GROUP=$(choose_group)
+
+case "$1" in
+    start)
+        load_misc_mod faulty
+        load_misc_mod hello
+        ;;
+    stop)
+        unload_misc_mod faulty
+        unload_misc_mod hello
+        ;;
+    *)
+        echo "Usage: $0 {start|stop}"
+        exit 1
+        ;;
+esac
+
+exit 0
+
