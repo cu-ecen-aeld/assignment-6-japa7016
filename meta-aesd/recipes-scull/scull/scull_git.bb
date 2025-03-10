@@ -26,8 +26,7 @@ inherit module update-rc.d
 
 EXTRA_OEMAKE += " -C ${STAGING_KERNEL_DIR} M=${S}/scull"
 
-do_install_append() 
-{
+do_install_append() {
     install -d ${D}${sysconfdir}/init.d
     install -m 0755 ${WORKDIR}/S98scull ${D}${sysconfdir}/init.d
 }
