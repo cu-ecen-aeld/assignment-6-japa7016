@@ -16,6 +16,9 @@ SRC_URI = "\
     file://S98scull \
 "
 
+PN = "scull"
+
+
 # Modify these as desired
 PV = "1.0+git${SRCPV}"
 SRCREV = "f4dba83ff02c0780b9071055e58a0ef389ad2fdc"

@@ -11,6 +11,9 @@
 LICENSE = "Unknown"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=f098732a73b5f6f3430472f5b094ffdb"
 
+PN = "misc-modules"
+
+
 SRC_URI = "\
     git://git@github.com/cu-ecen-aeld/assignment-7-japa7016.git;branch=main;protocol=ssh \
     file://S98misc \
